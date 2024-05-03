@@ -3,16 +3,18 @@ import { OpenAPIRouter } from '@cloudflare/itty-router-openapi'
 const apiKey = "pDy0w3lGo3j9gL2zwK"
 const router = OpenAPIRouter()
 
-// Der Main Router für Datenhandel
+// The main router for data handling
 router.post('/', async request => {
     const { company, driver, price, hookup, target, distance } = await request.json();
 
-    // Hier dein Code zum Abrufen der Fahrerdaten von Xano Backend
-    const driversResponse = await fetch(`https://api.bemany.world/dispatcher/get-driver?company_email=${company}&driver_first_name=${driver}`);
+    // Fetch driver information based on company email and driver's first name
+    const driversResponse = await fetch(`https://api.bemany.world/api:BZjiyDT6/dispatcher/get-driver?company_email=${company}&driver_first_name=${driver}`, {headers : {'accept': 'application/json'}});
     const driversData = await driversResponse.json();
 
-    if (driversResponse.status === 200) {
-        // Schritt zum Senden der Push-Benachrichtigung über Progressier
+    // If driver information exists, then execute this code
+    if (driversResponse.status === 200 && driversData.payload === undefined) {
+
+        // Step to send the push notification via Progressier
         await fetch(`https://progressier.app/${apiKey}/send`, {
             method: 'POST',
             headers: { 'Authorization':'Bearer bubbleu5ha4pusd7n4gxx7epb0c1x58xcaqbqxbopwj2p71q6aruvb', 'Content-Type': 'application/json'},
@@ -20,41 +22,55 @@ router.post('/', async request => {
                 recipients:{
                     email: driversData[0].email                    ,
             },
-            title: `Nuer Fahrt: ${price}`,
-            body: `Neue Fahrt:\nAbholadresse: ${hookup}\nZieladresse: ${target}\nPreis: ${price}\nEntfernung: ${distance}`
+            title: `Neuer Auftrag: ${price}`,
+            body: `Abholadresse: ${hookup}\nZieladresse: ${target}\nPreis: ${price}\nEntfernung: ${distance}`,
+            url: `https://portal.meinfahrer.app/?page=uber-dispatcher`,
         })
         });
 
-        // API-Aufruf zum Verknüpfen des Fahrers und des Unternehmens in der Xano-Datenbank
-        const updateResponse = await fetch('https://api.bemany.world/dispatcher/uber-rides', {
+        // API call to link the driver and the company in the Xano database
+        const updateResponse = await fetch('https://api.bemany.world/api:BZjiyDT6/dispatcher/uber-rides', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                driver_first_name : driversData[0].first_name,
-                driver_id : driversData[0].id,
-                companys_id : driversData[0].company_id,
-                pickup : hookup,
-                destination : target,
-                price : price,
-                distance : distance,
+                driver_first_name: driversData[0].first_name,
+                driver_id: driversData[0].id,
+                companys_id: driversData[0].companys_id,
+                company_admin_email: company,
+                pickup: hookup,
+                destination: target,
+                price: price,
+                distance: distance,
             })
         });
+        console.log("update response: ", await updateResponse.json());
 
-        // Überprüfen des Ergebnisses und entsprechende Rückgabe
+        // Check the result and provide appropriate response
         if (updateResponse.ok) {
-            return new Response('Update erfolgreich', { status: 200, headers: { 'Content-Type': 'text/plain' }});
+            return new Response('Update successful', { status: 200, headers: { 'Content-Type': 'text/plain' }});
         } else {
-            return new Response('Fehler beim Update in der Datenbank', { status: 500, headers: { 'Content-Type': 'text/plain' }});
+            return new Response('Error during update in the database', { status: 500, headers: { 'Content-Type': 'text/plain' }});
         }
-    } else {
-        // Fahrer nicht gefunden, Aufzeichnen des Fehlers in der Datenbank
-        await fetch('https://xano-backend.com/api/record-error', {
+    } else if (driversData.payload === 404) {
+        // Driver not found, record the error in the database
+
+        // API call to link the driver and the company in the Xano database
+        const updateResponse = await fetch('https://api.bemany.world/api:BZjiyDT6/dispatcher/uber-rides', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ note: 'Fahrer fehlt', companyId: company })
+            body: JSON.stringify({
+                driver_first_name: driver,
+                driver_id: null,
+                companys_id: null,
+                company_admin_email: company,
+                pickup: hookup,
+                destination: target,
+                price: price,
+                distance: distance,
+            })
         });
-
-        return new Response('Fahrer nicht gefunden', { status: 404, headers: { 'Content-Type': 'text/plain' }});
+        console.log("updateresponse error: ", await updateResponse.json());
+        return new Response('Driver not found', { status: 201, headers: { 'Content-Type': 'text/plain' }});
     }
 });
 
