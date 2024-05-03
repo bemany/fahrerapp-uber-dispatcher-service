@@ -1,0 +1,7 @@
+name = "fahrerapp-revenue-report-service"
+main = "index.js"
+node_compat = true
+
+account_id = "0e1a76cb9bb8de12b1e743da4e614f30"
+workers_dev = true
+compatibility_date = "2024-05-02"

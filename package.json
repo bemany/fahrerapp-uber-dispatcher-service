@@ -1,0 +1,22 @@
+{
+  "name": "fahrerapp-uber-dispatcher-service",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bemany/fahrerapp-uber-dispatcher-service.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/bemany/fahrerapp-uber-dispatcher-service/issues"
+  },
+  "homepage": "https://github.com/bemany/fahrerapp-uber-dispatcher-service#readme",
+  "dependencies": {
+    "@cloudflare/itty-router-openapi": "^1.1.1"
+  }
+}
