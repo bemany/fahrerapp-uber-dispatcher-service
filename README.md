@@ -42,7 +42,7 @@ Folgen Sie diesen Schritten, um das Projekt einzurichten:
 
 6. **Starten Sie den Worker:**
    ```bash
-   wrangler publish
+   wrangler deploy
    ```
 
 ## Benutzung

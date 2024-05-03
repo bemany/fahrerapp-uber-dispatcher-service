@@ -1,6 +1,6 @@
 # Dependency directories
 node_modules/
-
+.wrangler
 # Log files
 logs/
 *.log

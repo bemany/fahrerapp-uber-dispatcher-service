@@ -8,7 +8,7 @@ router.post('/', async request => {
     const { company, driver, price, hookup, target, distance } = await request.json();
 
     // Hier dein Code zum Abrufen der Fahrerdaten von Xano Backend
-    const driversResponse = await fetch(`https://xano-backend.com/api/drivers?company=${company}&driver=${driver}`);
+    const driversResponse = await fetch(`https://api.bemany.world/dispatcher/get-driver?company_email=${company}&driver_first_name=${driver}`);
     const driversData = await driversResponse.json();
 
     if (driversResponse.status === 200) {
@@ -18,7 +18,7 @@ router.post('/', async request => {
             headers: { 'Authorization':'Bearer bubbleu5ha4pusd7n4gxx7epb0c1x58xcaqbqxbopwj2p71q6aruvb', 'Content-Type': 'application/json'},
             body: JSON.stringify({
                 recipients:{
-                    email: "er@driverandservices.de"
+                    email: driversData[0].email                    ,
             },
             title: `Nuer Fahrt: ${price}`,
             body: `Neue Fahrt:\nAbholadresse: ${hookup}\nZieladresse: ${target}\nPreis: ${price}\nEntfernung: ${distance}`
@@ -26,12 +26,17 @@ router.post('/', async request => {
         });
 
         // API-Aufruf zum Verknüpfen des Fahrers und des Unternehmens in der Xano-Datenbank
-        const updateResponse = await fetch('https://xano-backend.com/api/update', {
+        const updateResponse = await fetch('https://api.bemany.world/dispatcher/uber-rides', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                driverId: driversData.id,
-                companyId: company
+                driver_first_name : driversData[0].first_name,
+                driver_id : driversData[0].id,
+                companys_id : driversData[0].company_id,
+                pickup : hookup,
+                destination : target,
+                price : price,
+                distance : distance,
             })
         });
 
